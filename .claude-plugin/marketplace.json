@@ -7,13 +7,13 @@
     "name": "mattiasthalen",
     "url": "https://github.com/mattiasthalen"
   },
-  "metadata": {
-    "pluginRoot": "./plugins"
-  },
   "plugins": [
     {
       "name": "grill-to-build",
-      "source": "./plugins/grill-to-build",
+      "displayName": "Grill to Build",
+      "source": "./",
+      "skills": ["./skills/grill-to-build"],
+      "strict": false,
       "description": "Interview to exhaustion, then a plan I confirm, then a workflow per slice. Use for any build run from a brief.",
       "version": "0.1.0",
       "author": {
