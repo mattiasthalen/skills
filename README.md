@@ -1,16 +1,15 @@
 # skills
 
-Skills, usable two ways.
+Mattias Thalén's skills, usable two ways.
 
-## As a plugin marketplace
+## As a plugin
 
 ```
 /plugin marketplace add mattiasthalen/skills
-/plugin install grill-to-build@mattiasthalen-skills
+/plugin install mattiasthalen-skills@mattiasthalen
 ```
 
-One marketplace entry per skill, so you install the one you want and not the
-rest.
+One plugin, holding every skill here. One for now.
 
 ## As plain files
 
@@ -27,22 +26,32 @@ cp -r skills/grill-to-build ~/.claude/skills/
 
 | skill | what it does |
 | --- | --- |
-| [`grill-to-build`](skills/grill-to-build) | Interview to exhaustion, then a plan I confirm, then a workflow per slice |
+| [`grill-to-build`](skills/grill-to-build) | A build run from a brief: interview to exhaustion, a plan I confirm, then a slice at a time |
 
 ## Layout
 
 ```
-.claude-plugin/marketplace.json   one entry per skill
+.claude-plugin/
+  plugin.json                     the plugin
+  marketplace.json                the marketplace it is served from
 skills/<name>/
   SKILL.md                        the skill
   README.md                       what it is for, and where its rules came from
 ```
 
-Adding a skill is a directory under `skills/` and one entry in
-`marketplace.json`. Each entry takes `"source": "./"` with an explicit
-`"skills"` path, so it loads its own directory and none of the others, and
-`"strict": false`, which makes the entry the whole definition and means no
-per-plugin manifest to keep in step.
+The repository is both the marketplace and the plugin it serves, so the one
+entry in `marketplace.json` takes `"source": "./"`. Skills are discovered from
+`skills/`, so adding one is a directory there and nothing else — no manifest
+edit, no new marketplace entry.
+
+`plugin.json` and the marketplace entry both carry the name and version, and
+`claude plugin tag` fails if they drift apart.
 
 `SKILL.md` carries its name in the front matter. Without it the invocation name
 falls back to the directory name and changes whenever the directory does.
+
+## Checking a change
+
+```
+claude plugin validate . --strict
+```

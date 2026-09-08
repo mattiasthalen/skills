@@ -1,27 +1,25 @@
 {
-  "$schema": "https://code.claude.com/schemas/marketplace.json",
-  "name": "mattiasthalen-skills",
-  "version": "0.1.0",
-  "description": "Skills for running work the way I want it run",
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "mattiasthalen",
+  "description": "Mattias Thalén's skills.",
   "owner": {
-    "name": "mattiasthalen",
+    "name": "Mattias Thalén",
     "url": "https://github.com/mattiasthalen"
   },
   "plugins": [
     {
-      "name": "grill-to-build",
-      "displayName": "Grill to Build",
+      "name": "mattiasthalen-skills",
       "source": "./",
-      "skills": ["./skills/grill-to-build"],
-      "strict": false,
-      "description": "Interview to exhaustion, then a plan I confirm, then a workflow per slice. Use for any build run from a brief.",
-      "version": "0.1.0",
+      "description": "Skills for running work the way I want it run. One for now: grill-to-build.",
+      "version": "0.2.0",
       "author": {
-        "name": "mattiasthalen",
+        "name": "Mattias Thalén",
         "url": "https://github.com/mattiasthalen"
       },
+      "homepage": "https://github.com/mattiasthalen/skills",
       "repository": "https://github.com/mattiasthalen/skills",
-      "keywords": ["planning", "interview", "vertical-slice", "adr", "workflow"],
+      "license": "MIT",
+      "keywords": ["skills", "planning", "vertical-slice", "adr", "workflow"],
       "category": "workflow"
     }
   ]

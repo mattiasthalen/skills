@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "mattiasthalen-skills",
+  "displayName": "Mattias Thalén's skills",
+  "version": "0.2.0",
+  "description": "Skills for running work the way I want it run. One for now: grill-to-build.",
+  "author": {
+    "name": "Mattias Thalén",
+    "url": "https://github.com/mattiasthalen"
+  },
+  "homepage": "https://github.com/mattiasthalen/skills",
+  "repository": "https://github.com/mattiasthalen/skills",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "planning",
+    "vertical-slice",
+    "adr",
+    "workflow"
+  ]
+}
