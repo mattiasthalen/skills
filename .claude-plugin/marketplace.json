@@ -1,0 +1,28 @@
+{
+  "$schema": "https://code.claude.com/schemas/marketplace.json",
+  "name": "mattiasthalen-skills",
+  "version": "0.1.0",
+  "description": "Skills for running work the way I want it run",
+  "owner": {
+    "name": "mattiasthalen",
+    "url": "https://github.com/mattiasthalen"
+  },
+  "metadata": {
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "grill-to-build",
+      "source": "./plugins/grill-to-build",
+      "description": "Interview to exhaustion, then a plan I confirm, then a workflow per slice. Use for any build run from a brief.",
+      "version": "0.1.0",
+      "author": {
+        "name": "mattiasthalen",
+        "url": "https://github.com/mattiasthalen"
+      },
+      "repository": "https://github.com/mattiasthalen/skills",
+      "keywords": ["planning", "interview", "vertical-slice", "adr", "workflow"],
+      "category": "workflow"
+    }
+  ]
+}
