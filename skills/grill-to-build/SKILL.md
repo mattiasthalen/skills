@@ -33,6 +33,10 @@ and it reaches me by path.
 Repairs group by file. Twenty findings is the widest work in a slice.
 
 ## Width
+Fan-out is a workflow, wherever it falls in the run, not just per slice.
+One agent you spawn; two you script. The numbers below are read from a
+run record, and only a workflow leaves one.
+
 The width you get is not the width the script asked for. Work from what
 you got: `workflowProgress` in the run record carries `queuedAt` and
 `startedAt` per agent. After every run, the numbers: most agents live at
