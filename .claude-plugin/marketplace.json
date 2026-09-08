@@ -11,7 +11,7 @@
       "name": "mattiasthalen-skills",
       "source": "./",
       "description": "Skills for running work the way I want it run. One for now: grill-to-build.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "Mattias Thalén",
         "url": "https://github.com/mattiasthalen"
