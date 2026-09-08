@@ -18,8 +18,13 @@
       },
       "homepage": "https://github.com/mattiasthalen/skills",
       "repository": "https://github.com/mattiasthalen/skills",
-      "license": "MIT",
-      "keywords": ["skills", "planning", "vertical-slice", "adr", "workflow"],
+      "keywords": [
+        "skills",
+        "planning",
+        "vertical-slice",
+        "adr",
+        "workflow"
+      ],
       "category": "workflow"
     }
   ]
