@@ -55,3 +55,7 @@ falls back to the directory name and changes whenever the directory does.
 ```
 claude plugin validate . --strict
 ```
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).

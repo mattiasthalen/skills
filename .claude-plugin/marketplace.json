@@ -18,6 +18,7 @@
       },
       "homepage": "https://github.com/mattiasthalen/skills",
       "repository": "https://github.com/mattiasthalen/skills",
+      "license": "MIT",
       "keywords": [
         "skills",
         "planning",
