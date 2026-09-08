@@ -23,6 +23,7 @@ rule above exists to stop.
 | `Name both on every agent` | all 149 agents inherited the main session's model. Every one of 4,747 calls in a sixteen-hour run was the large one, and neither `model` nor `effort` is set on a single `agent()` call in the eight workflow scripts, nor on the three agents the main session spawned directly |
 | `escalate ... when one comes back empty, or unsure on its own scale` | the two signals a cheap agent gives when it is out of its depth, and both are rare enough to escalate on: 4 of 86 adversarial verdicts landed in the uncertain band, and 1 of 18 lenses returned nothing |
 | `attacked, and killed` | the adversarial pass killed 11 findings of 29, then 12 of 33, then 1 of 24 — and nothing in the run noticed the third number |
+| `Fan-out is a workflow, wherever it falls in the run` | the line was there once — `Workflows wherever they help, not just per slice` — and the remake cut it as one describing what the model does anyway, no incident behind it. Without it, reading the brief's sources became 14 agents spawned from the driver's seat: a prompt typed and a digest read in the driver's window apiece, and no run record, so none of the numbers `Width` asks for after every run existed. Back, with the judgement taken out of it |
 
 Read the table before cutting a line. Every one of these looks like something a
 model would not need telling, which is exactly why they are here: each one was
@@ -86,11 +87,16 @@ driver generated. Planning is the cheap part.
 
 ## Where the numbers come from
 
-The last four rows are measured from the raw transcripts of one sixteen-and-a-
-half-hour run, published at
+The four rows from `A picture is the worst tenant on the board` to `attacked,
+and killed` are measured from the raw transcripts of one sixteen-and-a-half-hour
+run, published at
 [`mattiasthalen/adss-2026-09-07`](https://github.com/mattiasthalen/adss-2026-09-07)
 on the `claude/session-logs` branch: one main transcript, 149 subagents, twelve
 workflow runs.
+
+The fan-out row is later and lighter: one count from a fresh session on the same
+brief, seen rather than measured — no transcript is published, so what those
+fourteen cost the driver is not known here.
 
 Token counts come from `message.usage` on each `assistant` event, deduplicated
 by `message.id` — the same id repeats across streaming snapshots, and only the
