@@ -100,6 +100,7 @@ let attack = true
 for (let i = 0; i < slices.length; i++) {
   const s = slices[i]
   log(`Slice ${i + 1}/${slices.length}: ${s.name} (${s.level}), ${base} -> ${s.branch}${attack ? '' : ', attack off'}`)
+  phase(`Slice ${i + 1} - ${s.name}`)
   const digest = await workflow({ scriptPath: script }, {
     slice: s.name,
     plan,
@@ -109,7 +110,6 @@ for (let i = 0; i < slices.length; i++) {
     ledger,
     adr,
     index: i + 1,
-    total: slices.length,
     lens: s.lens || undefined,
     attack,
     models: args.models,
