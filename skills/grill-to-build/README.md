@@ -8,6 +8,10 @@ without it, and lines that describe what the model does anyway have been cut
 rather than kept for completeness. Adding a line is a claim that something went
 wrong without it, and that claim should be checkable.
 
+[`example-brief.md`](example-brief.md) is the brief the run below started from,
+rewritten against this version of the skill: the process half is gone, because
+the skill holds it now.
+
 ## What each line is defending against
 
 These are the incidents on record. Lines added since are not listed, because
