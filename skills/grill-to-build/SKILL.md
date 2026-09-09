@@ -6,28 +6,23 @@ description: "A build run from a brief. Use whenever I hand you one."
 ## The run
 1. **Interview me to exhaustion.** A round that produces nothing you
    would otherwise have invented ends it. Spike what I can't answer:
-   time-boxed, thrown away, never landed.
+   time-boxed, thrown away when the answer is in hand.
 2. **Plan**, in plan mode. It names the slices, the seams that get TDD —
    the rest gets checks — and how hard each is: trivial, routine, hard or
    novel. Fresh agents review it, findings to me unrevised.
 3. **I confirm it**, at the plan-mode prompt. The plan file is what every
    slice reads.
-4. **One workflow builds the plan**, a slice at a time, vertical, thin end
-   to end, widened one at a time; you take the stack's digest and report
-   to me. It is written: `${CLAUDE_SKILL_DIR}/workflows/build.js`, run by
-   path once I have confirmed the plan, with the pointers as `args` —
-   plan, base, records, ledger, adr, and `script`, the path of `slice.js`
-   beside it; `models` where you have judged a rung. `slice.js` alone
+4. **One workflow builds the plan and reviews it**, a slice at a time,
+   vertical, thin end to end, widened one at a time; you take the stack's
+   digest and report to me. It is written:
+   `${CLAUDE_SKILL_DIR}/workflows/build.js`, run by path, with the
+   pointers as `args`; the script's head names them. `slice.js` alone
    steers one slice. Copy either only for a shape it lacks.
    - MADR at the decision, never batched.
    - Red and green in a single conventional commit.
-   - Code review and security review are the workflow's lenses. Neither
-     runs in your seat.
 
-A slice is done when it builds from a clean clone, code review and
-security review have both run on it, every finding is fixed or written
-down, and it is a pull request stacked on the one before, marked ready
-for review. I read the stack when the plan is done.
+A slice is done when its digest comes back with `unfinished` empty. I
+read the stack when the plan is done.
 
 ## Pointers
 You hold pointers: slice, branch, commit range, records, findings. Agents
@@ -38,27 +33,24 @@ Everything you hold pays rent: its size, every turn it stays. A picture is
 the worst tenant on the board. An agent reads it and hands you the numbers,
 and it reaches me by path.
 
-Repairs group by file. Twenty findings is the widest work in a slice.
-
 ## Width
-Fan-out is a workflow, wherever it falls in the run, not just per slice.
-One agent you spawn; two you script. The numbers below are read from a
-run record, and only a workflow leaves one.
+Fan-out is a workflow, wherever it falls in the run. One agent you
+spawn; two you script. The numbers below are read from a run record,
+and only a workflow leaves one.
 
-The width you get is not the width the script asked for. Work from what
-you got: `workflowProgress` in the run record carries `queuedAt` and
-`startedAt` per agent. After every run, the numbers: most agents live at
-once, the longest wait between queued and started, and — where findings
-were attacked — attacked and killed. An attack that has stopped killing
-has stopped paying for its run: the build turns it off for the next
-slice, and says so.
+Work from the width you got, not the width the script asked for:
+`workflowProgress` in the run record carries `queuedAt` and `startedAt`
+per agent. After every run, the numbers: most agents live at once, the
+longest wait between queued and started, and — where findings were
+attacked — attacked and killed. An attack that has stopped killing has
+stopped paying for its run: the build turns it off for the next slice,
+and says so.
 
 Widen the job, not the count.
 
 ## Model
 Judge each agent's model and effort from its job, and name both. Say
 nothing and the runner inherits mine, which spends at my rate by default.
-What I drive on is mine to set.
 
 A task's model follows how hard it is, judged in the plan and checked by
 the frame against the code: routine is Sonnet at low effort, trivial a
@@ -80,6 +72,6 @@ Derive everything you tell me about the record.
 ## Ledger
 Append to the ledger as the slice goes: timestamp, sha, what and why — a
 path and a line, so it pays almost no rent. Chronology lives there. The
-ledger and the records are yours, not the repository's: nothing under
-them is committed. When you resume, read the ledger first, and say so in
-your next message to me.
+ledger and the records are yours; the repository's commits carry source,
+tests and ADRs only. When you resume, read the ledger first, and say so
+in your next message to me.

@@ -18,16 +18,16 @@ rule above exists to stop.
 | --- | --- |
 | `Give an agent the path and take back its digest` | two reads of one screenshot were 45% of a slice's context |
 | `An ADR's Confirmation names a check you ran the mutation against and watched fail` | five decision records, five confirmation sections naming checks nobody had written |
-| `One workflow per slice frames it, builds it, verifies it and repairs what it found` | the driver built, in every slice: 378 file-writing calls and 274,220 tokens of authoring it typed itself, 82,853 of them straight into `src/`, `tests/`, `dab/`, `das/` and `dar/`. The step used to name four agents without saying where they run, and the building landed in the seat that names them. Twelve workflow runs cost the driver 33,045 tokens in total — the script written and the digest read back, for all 145 agents — so what leaked into its window was never the launching |
+| `One workflow builds the plan and reviews it` | the driver built, in every slice: 378 file-writing calls and 274,220 tokens of authoring it typed itself, 82,853 of them straight into `src/`, `tests/`, `dab/`, `das/` and `dar/`. The step used to name four agents without saying where they run, and the building landed in the seat that names them. Twelve workflow runs cost the driver 33,045 tokens in total — the script written and the digest read back, for all 145 agents — so what leaked into its window was never the launching |
 | `A picture is the worst tenant on the board` | the rule above did not hold. Nine screenshot reads landed in the main context, each picture read twice inside three minutes, and those nine were 58% of every tool-result token the session ever took in |
 | `Name both on every agent` | all 149 agents inherited the main session's model. Every one of 4,747 calls in a sixteen-hour run was the large one, and neither `model` nor `effort` is set on a single `agent()` call in the eight workflow scripts, nor on the three agents the main session spawned directly |
 | `escalate ... when one comes back empty, or unsure on its own scale` | the two signals a cheap agent gives when it is out of its depth, and both are rare enough to escalate on: 4 of 86 adversarial verdicts landed in the uncertain band, and 1 of 18 lenses returned nothing |
 | `attacked, and killed` | the adversarial pass killed 11 findings of 29, then 12 of 33, then 1 of 24 — and nothing in the run noticed the third number |
 | `Fan-out is a workflow, wherever it falls in the run` | the line was there once — `Workflows wherever they help, not just per slice` — and the remake cut it as one describing what the model does anyway, no incident behind it. Without it, reading the brief's sources became 14 agents spawned from the driver's seat: a prompt typed and a digest read in the driver's window apiece, and no run record, so none of the numbers `Width` asks for after every run existed. Back, with the judgement taken out of it |
 | `It is written` (step 4, the path of `build.js`) | not a new incident: the three rows above it, made mechanical. The eight scripts the driver wrote by hand set neither `model` nor `effort` on any `agent()` call; none returned attacked and killed, so nothing noticed the third number; twelve runs of them cost the driver 33,045 tokens of script typed and digest read. A script typed once and run by path is where those rules are code instead of lines the driver remembers while it types |
-| `Code review and security review are the workflow's lenses` | after every slice, the driver ran a code review and a security review in the main session, because the done sentence names both and nothing said where they run. Seen by the user across a run, not measured from a transcript, so no number is claimed |
+| `and reviews it` (step 4) | after every slice, the driver ran a code review and a security review in the main session, because the done sentence named both and nothing said where they run. Seen by the user across a run, not measured from a transcript, so no number is claimed. It was first a bullet of its own, "neither runs in your seat", and the writing pass cut that as a prohibition: the positive is the workflow reviewing, said in step 4's lead |
 | `A task's model follows how hard it is` | not an incident: a judgement made in planning this workflow, against the cost table below. Its first draft put one floor under every job, then one rung per role, and each puts the same model under a rename and a query planner. Judging the task, in the plan and against the code, is the rule the first line of `Model` already stated, made mechanical |
-| `nothing under them is committed` | the first draft of this workflow had the frame agent commit `frame.md` as the slice's first commit, and was stopped in planning: the records and the ledger are the driver's, the repository's commits carry source, tests and ADRs. Seen, not measured |
+| `the repository's commits carry source, tests and ADRs only` | the first draft of this workflow had the frame agent commit `frame.md` as the slice's first commit, and was stopped in planning: the records and the ledger are the driver's, the repository's commits carry source, tests and ADRs. Seen, not measured |
 | `Plan, in plan mode` | asked for by the user, so that the plan is the file the harness presents for approval, read by every slice, rather than one of the driver's own making. Asked for, not measured |
 
 Read the table before cutting a line. Every one of these looks like something a
@@ -47,6 +47,22 @@ The skill was run through `mattpocock/skills`' `writing-for-agents` after the
 rules above were added, which is where that refactor came from, along with the
 positive phrasing of the picture rule — it was written as a prohibition, and a
 prohibition is how you keep a behaviour in mind.
+
+It was run through it again once the workflows were written, with the scripts'
+prompts under the same standard. That pass cut ten lines from the skill, every
+one for a meaning now held elsewhere: the done sentence's four clauses, each
+decided and reported by `slice.js`, became one criterion on the digest; the
+lenses bullet, a prohibition, became "and reviews it" in step 4's lead; the
+list of args, a copy of the script's head, which throws a better error than the
+list gave; the repair width, code in `slice.js`; the ledger line's negation; the
+model line the driver has no lever on; and three grown clauses. In the prompts
+it cut the sentence forbidding a fileless finding, which the schema already
+refuses; caught the slices agent being asked for the branch a slice builds on
+where the code reads the branch it lands on; front-loaded the recompute prompt;
+gave the frame prompt a list and a criterion for done; and hoisted the sentences
+every review and repair shared. It left the description alone, which opens on
+"A build" where the standard wants the trigger word first, because the
+description is the user's.
 
 ## Does one session hold a plan?
 
@@ -184,7 +200,10 @@ confirmed plan, and `slice.js` runs one slice. The plugin serves them by name,
 the driver runs them by path, `${CLAUDE_SKILL_DIR}/workflows/build.js`, with
 the pointers as `args`. Two files, one responsibility each: `slice.js` knows
 nothing about the build, and `build.js` holds the loop, the stacking and the
-attack rule. Steering one slice is running `slice.js` alone. Re-planning
+attack rule. In `/workflows`, a child's agents sit under a group named for the
+child, so every phase `slice.js` runs carries the slice's prefix, "slice-2:
+Frame", "slice-2: Seam 1: reader", and a build reads slice by slice; `label`
+in the args sets the prefix, and the branch is the default. Steering one slice is running `slice.js` alone. Re-planning
 mid-build is stopping the run, editing the plan, and rerunning `build.js` with
 `from`.
 
@@ -258,7 +277,7 @@ unsure, the draft PR at the first seam only, the per-seam loop, the dedup, the
 twenty cap, a seam that never finishes, a lens that never answers, a clone that
 never passes leaving the PR a draft, the stacking, the attack rule, `from`, the
 agent count and its warning, a throwing child, and every way of failing before
-an agent runs. Neither script has run live. The first live build is the check
+an agent runs; 62 checks after the writing pass. Neither script has run live. The first live build is the check
 of everything a fake agent cannot show: that the runtime replays a child
 workflow's cached agents on resume, that the seam phases group as the plan
 says, and what the numbers look like. Until then, none of the numbers this

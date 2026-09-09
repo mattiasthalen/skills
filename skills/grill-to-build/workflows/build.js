@@ -76,7 +76,7 @@ const SLICES = {
 const listed = await climb(
   'slices',
   named('slices') || RUNGS.routine,
-  `Read the plan at ${plan} and return its slices in build order: each one's name as the plan gives it, the branch it builds on (as the plan names it, or a short kebab-case name from the slice's), how hard the plan says it is (trivial, routine, hard or novel; unnamed is routine), and the review the plan asks for on that slice alone, as a job for a reviewer, where it asks for one. Return your confidence in the list on your own scale, 0 to 1.`,
+  `Read the plan at ${plan} and return its slices in build order: each one's name as the plan gives it, the branch it lands on (as the plan names it, or a short kebab-case name from the slice's), how hard the plan says it is (trivial, routine, hard or novel; unnamed is routine), and the review the plan asks for on that slice alone, as a job for a reviewer, where it asks for one. Return your confidence in the list on your own scale, 0 to 1.`,
   { label: 'slices', phase: 'Slices', schema: SLICES },
   r => (!r.slices.length ? 'empty' : r.confidence < UNSURE ? 'unsure' : null),
 )
