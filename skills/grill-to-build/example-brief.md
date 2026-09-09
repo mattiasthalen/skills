@@ -1,6 +1,15 @@
 # Brief
 Build ADSS as blog.daana.dev describes it.
 
+## Stack
+- landing zone: Azure blob, bfdatalake/raw/adss/das
+- platform: Snowflake, bf_sandbox
+- destination: Snowsight, role ADSS_SANDBOX_ROLE
+- auth: local and interactive — az cli and snow cli, device code. There is
+  no non-interactive credential, so CI cannot reach either. Snowflake's own
+  read access to the blob is a separate credential again, and I do not have
+  it yet.
+
 ## Sources
 - https://blog.daana.dev/blog/design-of-analytical-systems
 - https://blog.daana.dev/blog/from-business-question-to-prototype-in-hours
