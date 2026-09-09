@@ -1,14 +1,7 @@
 export const meta = {
   name: 'slice',
   description: 'One slice of a grill-to-build run: frame, a seam at a time, verify, attack, repair, close',
-  whenToUse: 'One slice of a confirmed plan, with the pointers as args. build.js beside it runs every slice.',
-  phases: [
-    { title: 'Frame', detail: 'one agent: the seams in order, their checks, their levels' },
-    { title: 'Verify', detail: 'the lenses at once on the whole, code and security review among them' },
-    { title: 'Attack', detail: 'one skeptic per finding' },
-    { title: 'Repair', detail: 'one agent per file, in turn, twenty findings at most' },
-    { title: 'Close', detail: 'a clean clone, the findings written down, the PR marked ready' },
-  ],
+  whenToUse: 'One slice of a confirmed plan, with the pointers as args. build.js beside it runs every slice. Phases, each prefixed with the slice: Frame; one per seam, a build, a review, a repair; Verify, the lenses at once; Attack, a skeptic per finding; Repair, a file at a time; Close, a clean clone and the PR marked ready.',
 }
 
 // One slice of grill-to-build, run by path with the pointers as args:
@@ -19,12 +12,14 @@ export const meta = {
 //   records  a directory outside the repository for frame.md, findings.md and pr.md
 //   ledger   the ledger, outside the repository
 //   adr      the MADR directory, inside the repository
+//   label    optional: the prefix of this slice's phases in the progress view; the branch by default
 //   lens     optional: the slice-specific lens, as a job for a reviewer
 //   attack   optional: false when the last slice's kill count says the attack stopped paying
 //   models   optional: a level or a rung by name, for a job, a seam, or a lens
 //   rungs    optional: the rung each level maps to
 //   ladder   optional: the rungs for climbing, lowest first, as model/effort
-// It returns pointers and numbers, never contents. Each seam is its own phase.
+// It returns pointers and numbers, never contents. Each seam is its own phase, and every phase
+// carries the slice's prefix, so a build of several slices reads slice by slice in /workflows.
 
 const need = ['slice', 'plan', 'base', 'branch', 'records', 'ledger', 'adr']
 const missing = need.filter(k => !args || !args[k])
@@ -33,6 +28,7 @@ const { slice, plan, base, branch, records, ledger, adr } = args
 const attack = args.attack !== false
 const frame = `${records}/frame.md`
 const range = `${base}..${branch}`
+const P = `${args.label || branch}: ` // the prefix of every phase of this slice
 
 // Complexity, not role: a task's level sets its rungs. The plan names levels, the frame checks
 // them against the code, args.models overrides by name. A review sits one rung above what it reviews.
@@ -88,6 +84,8 @@ const unsure = r => (r.confidence < UNSURE ? 'unsure' : null)
 const where = f => `${f.file}${f.line != null ? `:${f.line}` : ''}`
 const listOf = items => items.map(f => `${f.id}. [${f.severity}] ${f.title}, at ${where(f)}\n   ${f.detail}`).join('\n')
 const RECORDS_RULE = `The ledger and everything under ${records} are the driver's records; the repository's commits carry source, tests and ADRs only.`
+const REPORT_RULE = 'Report each finding at the file and line it lives on, with a one-line title, the detail a repairer needs, and a severity of high, medium or low. Return an empty list when there is nothing to find'
+const SCALE = 'your confidence on your own scale, 0 to 1'
 
 const CONFIDENCE = { type: 'number', minimum: 0, maximum: 1 }
 const LEVEL = { type: 'string', enum: LEVELS }
@@ -168,10 +166,17 @@ const framed = await climb(
   frameRung,
   `Frame slice "${slice}" of the plan at ${plan}, on top of branch ${base}.
 Read the plan, then the code as ${base} has it. Create ${branch} from ${base} if it does not exist and leave it at ${base}: the first commit is the first seam's.
-Write ${frame}, the driver's record, outside the repository: what is in the slice and what is deliberately not; the seams in build order, each with the first failing check it starts from, one seam, one test, one minimal implementation; the checks the rest gets; the decisions that need a MADR, each with the check its Confirmation will name; the files it expects to touch; the build from a clean clone and the acceptance check, as exact commands; the commit convention in use.
-Levels: the plan says how hard each seam is and the slice as a whole, trivial, routine, hard or novel; unnamed in the plan is routine. Return each as the plan has it, and beside it your own after reading the code, kept where the code agrees and moved either way where it does not.
-Return the structure, not the prose: seams (name, check, planned, level), checks, decisions, build, accept, the slice's planned and level, and your confidence in the frame on your own scale, 0 to 1.`,
-  { label: 'frame', phase: 'Frame', schema: FRAME },
+Write ${frame}, the driver's record, outside the repository, with a heading for each of these:
+1. What is in the slice, and what is deliberately not.
+2. The seams in build order, each with the first failing check it starts from: one seam, one test, one minimal implementation.
+3. The checks the rest gets.
+4. The decisions that need a MADR, each with the check its Confirmation will name.
+5. The files it expects to touch.
+6. The build from a clean clone and the acceptance check, as exact commands.
+7. The commit convention in use.
+8. Levels. The plan says how hard each seam is and the slice as a whole, trivial, routine, hard or novel; unnamed in the plan is routine. Give each as the plan has it, and beside it your own after reading the code, kept where the code agrees and moved either way where it does not.
+The frame is written when every item above has a heading in it. Return the structure, not the prose: seams (name, check, planned, level), checks, decisions, build, accept, the slice's planned and level, and ${SCALE}.`,
+  { label: 'frame', phase: `${P}Frame`, schema: FRAME },
   r => (!r.seams.length && !r.checks.length ? 'empty' : unsure(r)),
 )
 if (!framed) throw new Error('no frame: the frame agent returned nothing at any rung')
@@ -201,7 +206,8 @@ let pr = ''
 // A seam at a time, each its own phase: build, a review one rung above, a repair of what it found.
 for (let i = 0; i < framed.seams.length; i++) {
   const s = framed.seams[i]
-  const phase = `Seam ${i + 1}: ${s.name}`
+  const title = `Seam ${i + 1}: ${s.name}`
+  const phase = `${P}${title}`
   const seamNamed = named(s.name)
   const build = seamNamed || RUNGS[s.level]
   const rungs = {
@@ -214,10 +220,10 @@ for (let i = 0; i < framed.seams.length; i++) {
   models.seams[s.name] = rungs
   const out = { name: s.name, level: s.level, done: false, commits: 0, findings: 0, fixed: 0, writtenDown: 0 }
   seams.push(out)
-  log(`${phase}: ${s.level}, build at ${rungs.build}, review at ${rungs.review}`)
+  log(`${title}: ${s.level}, build at ${rungs.build}, review at ${rungs.review}`)
 
   const built = await climb(
-    `${phase} build`,
+    `${title} build`,
     rungs.build,
     `Build seam "${s.name}" of slice "${slice}" on branch ${branch}.
 Read the ledger at ${ledger}, then the frame at ${frame}, and continue from the ledger's last line where an earlier agent stopped.
@@ -225,41 +231,41 @@ Write the seam's failing check first, ${s.check}, and watch it fail. Write only 
 A decision the frame lists for this seam gets a MADR in ${adr} at the moment you make it; its Confirmation names a check that exists in the tree, which you ran against the mutation and watched fail.
 Append one line to ${ledger} per commit: timestamp from date -u, sha, what and why. ${RECORDS_RULE}
 Push ${branch}.${pr ? '' : ` Open a draft pull request from ${branch} onto ${base}, titled for the slice, its body the summary in ${frame}, and return its URL, or an empty string with the reason in the note.`}
-Return the seam's range as the sha before it and the sha after it from git log, its commit count, its ADRs with the check each Confirmation names, done (true once the check passes and the commit is in), the pull request URL, the note, and your confidence on your own scale, 0 to 1.`,
-    { label: `${phase} build`, phase, schema: BUILT },
+Return the seam's range as the sha before it and the sha after it from git log, its commit count, its ADRs with the check each Confirmation names, done (true once the check passes and the commit is in), the pull request URL, the note, and ${SCALE}.`,
+    { label: `${title} build`, phase, schema: BUILT },
     r => (!r.done ? 'unfinished' : unsure(r)),
   )
   if (!built) {
-    unfinished.push(`${phase}: no result at any rung`)
+    unfinished.push(`${title}: no result at any rung`)
     continue
   }
   if (built.pr && !pr) pr = built.pr
   out.done = built.done
   out.commits = built.commits
   adrs.push(...built.adrs)
-  if (!built.done) unfinished.push(`${phase}: not done at the top of the ladder`)
+  if (!built.done) unfinished.push(`${title}: not done at the top of the ladder`)
 
   const reviewed = await climb(
-    `${phase} review`,
+    `${title} review`,
     rungs.review,
     `Review seam "${s.name}" of slice "${slice}": the diff ${built.range} on branch ${branch}, and the code it touches. Look for defects, and for the refactoring the green left behind: duplication, naming, structure. Check that the seam's test, ${s.check}, fails without the change it guards.
-Report each finding at the file and line it lives on, with a one-line title, the detail a repairer needs, and a severity of high, medium or low. A finding you cannot place on a file is not a finding. Return an empty list when there is nothing to find, and your confidence on your own scale, 0 to 1.`,
-    { label: `${phase} review`, phase, schema: FINDINGS },
+${REPORT_RULE}, and ${SCALE}.`,
+    { label: `${title} review`, phase, schema: FINDINGS },
     unsure,
   )
-  const found = (reviewed ? reviewed.findings : []).map(f => ({ ...f, id: findings.length + 1 + (reviewed.findings.indexOf(f)), lens: `${phase} review`, stage: 'seam', fate: 'stands', note: '', sha: '' }))
+  const found = (reviewed ? reviewed.findings : []).map(f => ({ ...f, id: findings.length + 1 + (reviewed.findings.indexOf(f)), lens: `${title} review`, stage: 'seam', fate: 'stands', note: '', sha: '' }))
   findings.push(...found)
   out.findings = found.length
   if (!found.length) continue
 
   const done = await climb(
-    `${phase} repair`,
+    `${title} repair`,
     rungs.repair,
     `Repair seam "${s.name}" of slice "${slice}" on branch ${branch}. The findings, by id:
 ${listOf(found)}
 Read the ledger at ${ledger} first: an earlier agent may have fixed some of these. For each finding, fix it, or write down why it stays, a reason a reviewer would accept. Run the seam's check and the frame's checks (${frame}) after each fix. Commit each fix as its own conventional commit, append one line to ${ledger} for it (timestamp from date -u, sha, what and why), and push. ${RECORDS_RULE}
-Return every id with fixed true or false, the note, the sha when fixed, and your confidence on your own scale, 0 to 1.`,
-    { label: `${phase} repair`, phase, schema: REPAIRED },
+Return every id with fixed true or false, the note, the sha when fixed, and ${SCALE}.`,
+    { label: `${title} repair`, phase, schema: REPAIRED },
     unsure,
   )
   for (const f of found) {
@@ -284,16 +290,16 @@ const review = (lens, job) =>
     lens,
     named(lens) || models.slice.review,
     `Review slice "${slice}": branch ${branch}, the diff ${range}, the frame at ${frame}. Read the diff and the code it touches, and ${job}.
-Report each finding at the file and line it lives on, with a one-line title, the detail a repairer needs, and a severity of high, medium or low. A finding you cannot place on a file is not a finding. Return an empty list when there is nothing to find, and your confidence in the review on your own scale, 0 to 1.`,
-    { label: lens, phase: 'Verify', schema: FINDINGS },
+${REPORT_RULE}, and ${SCALE}.`,
+    { label: lens, phase: `${P}Verify`, schema: FINDINGS },
     r => (!r.findings.length ? 'empty' : unsure(r)),
   )
 const recompute = (label, phase) =>
   climb(
     label,
     models.slice.recompute,
-    `Recompute slice "${slice}" from nothing. Clone the local repository fresh into a temporary directory, check out ${branch} there, and run there, not in the working tree, the build from a clean clone and the acceptance check the frame at ${frame} names. Then, for every MADR under ${adr} that ${range} adds, run the check its Confirmation names.
-Each command that fails is a finding, with its output as the detail and the file it points at; a check that does not exist is a finding on the ADR that names it. Return an empty list when everything runs, and your confidence on your own scale, 0 to 1.`,
+    `Recompute slice "${slice}" from nothing. Clone the local repository fresh into a temporary directory, check out ${branch} there, and run everything that follows in that clone: the build from a clean clone and the acceptance check the frame at ${frame} names, then, for every MADR under ${adr} that ${range} adds, the check its Confirmation names.
+Each command that fails is a finding, with its output as the detail and the file it points at; a check that does not exist is a finding on the ADR that names it. Return an empty list when everything runs, and ${SCALE}.`,
     { label, phase, schema: FINDINGS },
     unsure,
   )
@@ -308,7 +314,7 @@ if (args.lens) LENSES.push(['slice lens', args.lens])
 // A barrier: findings are deduplicated across lenses before anything is spent on them.
 const reviewed = (await parallel([
   ...LENSES.map(([lens, job]) => () => review(lens, job).then(r => [lens, r])),
-  () => recompute('recomputation', 'Verify').then(r => ['recomputation', r]),
+  () => recompute('recomputation', `${P}Verify`).then(r => ['recomputation', r]),
 ])).filter(Boolean)
 const reviews = reviewed.filter(([, r]) => r).map(([lens]) => lens)
 for (const must of ['code review', 'security review', 'recomputation'])
@@ -343,8 +349,8 @@ if (attack && whole().length) {
       `Refute this finding from the ${f.lens} of branch ${branch} (${range}):
 ${f.title}, at ${where(f)}
 ${f.detail}
-Read the code it names. It stands if it is real and worth fixing in this slice; it is refuted if it is wrong, already handled, or outside the slice as the frame at ${frame} draws it. Give the reason in one line, and your confidence on your own scale, 0 to 1. A verdict you cannot settle is a low confidence, not a guess.`,
-      { label: `attack #${f.id}`, phase: 'Attack', schema: VERDICT },
+Read the code it names. It stands if it is real and worth fixing in this slice; it is refuted if it is wrong, already handled, or outside the slice as the frame at ${frame} draws it. Give the reason in one line, and ${SCALE}. A verdict you cannot settle is a low confidence, not a guess.`,
+      { label: `attack #${f.id}`, phase: `${P}Attack`, schema: VERDICT },
       unsure,
     )))
   verdicts.forEach((v, i) => {
@@ -383,7 +389,7 @@ async function repair(group, phase) {
     `Repair ${group.file} on branch ${branch}. The findings, by id:
 ${listOf(group.items)}
 Read the ledger at ${ledger} first: an earlier agent may have fixed some of these. For each finding, fix it, or write down why it stays, a reason a reviewer would accept. Run the checks the frame at ${frame} names after each fix. Commit each fix as its own conventional commit, append one line to ${ledger} for it (timestamp from date -u, sha, what and why), and push. ${RECORDS_RULE}
-Return every id with fixed true or false, the note, the sha when fixed, and your confidence on your own scale, 0 to 1.`,
+Return every id with fixed true or false, the note, the sha when fixed, and ${SCALE}.`,
     { label: `repair ${group.file}`, phase, schema: REPAIRED },
     unsure,
   )
@@ -400,18 +406,18 @@ Return every id with fixed true or false, the note, the sha when fixed, and your
   }
 }
 const groups = byFile(standing.slice(0, WIDEST))
-for (const g of groups) await repair(g, 'Repair')
+for (const g of groups) await repair(g, `${P}Repair`)
 const count = (fate, stage = 'slice') => findings.filter(f => f.stage === stage && f.fate === fate).length
 log(`Repair: ${groups.length} files, ${count('fixed')} fixed, ${count('written down')} written down`)
 
 // Close: done means it builds from a clean clone after the repairs. One more round on what the clean
 // clone finds, then the findings written down, the PR body checked against the record, the PR marked ready.
-let clean = await recompute('clean clone', 'Close')
+let clean = await recompute('clean clone', `${P}Close`)
 if (clean && clean.findings.length) {
   const again = clean.findings.map((f, i) => ({ ...f, id: findings.length + 1 + i, lens: 'clean clone', stage: 'slice', fate: 'stands', note: '', sha: '' }))
   findings.push(...again)
-  for (const g of byFile(again)) await repair(g, 'Close')
-  clean = await recompute('clean clone, again', 'Close')
+  for (const g of byFile(again)) await repair(g, `${P}Close`)
+  clean = await recompute('clean clone, again', `${P}Close`)
 }
 const builds = !!clean && !clean.findings.length
 if (!builds) unfinished.push(clean ? `clean clone: ${clean.findings.map(f => f.title).join('; ')}` : 'clean clone: no result at any rung')
@@ -428,10 +434,12 @@ ${table || '(no findings)'}
 2. Write ${records}/pr.md: what the slice is, from the frame at ${frame}; the seams built; the ADRs by path; the reviews that ran; the findings numbers; and every finding written down, with its reason. Check every claim in it against git log ${range} and git diff ${range}, and take out any the log or diff does not support. Set it as the body of the pull request${pr ? ` at ${pr}` : `, opening one from ${branch} onto ${base} first`}.
 3. ${builds ? 'The slice builds from a clean clone: mark the pull request ready for review.' : 'The slice does not build from a clean clone: leave the pull request a draft and say so in the note.'}
 Append one line to ${ledger}: timestamp from date -u, the sha of ${branch}, what and why. ${RECORDS_RULE}
-Return the pull request URL, ready (true once it is marked ready for review), the commit count from git rev-list --count ${range}, the note, and your confidence on your own scale, 0 to 1.`,
-  { label: 'close', phase: 'Close', schema: CLOSED },
+Return the pull request URL, ready (true once it is marked ready for review), the commit count from git rev-list --count ${range}, the note, and ${SCALE}.`,
+  { label: 'close', phase: `${P}Close`, schema: CLOSED },
   unsure,
 )
+const unrepaired = findings.filter(f => f.fate === 'unrepaired').length
+if (unrepaired) unfinished.push(`${unrepaired} findings unrepaired: no outcome came back for them`)
 if (!closed) unfinished.push('close: no result at any rung')
 else if (!closed.pr) unfinished.push(`pull request: ${closed.note}`)
 else if (builds && !closed.ready) unfinished.push(`pull request not marked ready: ${closed.note}`)
