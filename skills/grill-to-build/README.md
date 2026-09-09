@@ -29,6 +29,7 @@ rule above exists to stop.
 | `A task's model follows how hard it is` | not an incident: a judgement made in planning this workflow, against the cost table below. Its first draft put one floor under every job, then one rung per role, and each puts the same model under a rename and a query planner. Judging the task, in the plan and against the code, is the rule the first line of `Model` already stated, made mechanical |
 | `the repository's commits carry source, tests and ADRs only` | the first draft of this workflow had the frame agent commit `frame.md` as the slice's first commit, and was stopped in planning: the records and the ledger are the driver's, the repository's commits carry source, tests and ADRs. Seen, not measured |
 | `Plan, in plan mode` | asked for by the user, so that the plan is the file the harness presents for approval, read by every slice, rather than one of the driver's own making. Asked for, not measured |
+| `disable-model-invocation: true` | asked for by the user: the skill runs when they type `/grill-to-build` and never because a message matched its description, so the description carries no trigger and the skill costs the session no context until it is called. Asked for, not measured |
 
 Read the table before cutting a line. Every one of these looks like something a
 model would not need telling, which is exactly why they are here: each one was
@@ -60,9 +61,10 @@ it cut the sentence forbidding a fileless finding, which the schema already
 refuses; caught the slices agent being asked for the branch a slice builds on
 where the code reads the branch it lands on; front-loaded the recompute prompt;
 gave the frame prompt a list and a criterion for done; and hoisted the sentences
-every review and repair shared. It left the description alone, which opens on
-"A build" where the standard wants the trigger word first, because the
-description is the user's.
+every review and repair shared. It flagged the description for opening on "A
+build" where a trigger word should lead; the point lapsed when the skill became
+user-invoked, since a description that never triggers anything is a one-line
+summary for the `/` menu, and that is what it is now.
 
 ## Does one session hold a plan?
 
