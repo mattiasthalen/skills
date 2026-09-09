@@ -56,10 +56,12 @@ nothing and the runner inherits mine, which spends at my rate by default.
 A task's model follows how hard it is, judged in the plan and checked by
 the frame against the code: routine is Sonnet at low effort, trivial a
 tier down, hard and novel up, and a review sits a rung above what it
-reviews. Escalate — effort first, then a tier — when one comes back
-empty, or unsure on its own scale; say which, and on what signal. A tier
-change boots a fresh agent that pays its rent again from zero, because a
-cache belongs to the model that wrote it.
+reviews. Research and spikes get the same judgement from you, from the
+question: routine unless it says otherwise. Escalate — effort first,
+then a tier — when one comes back empty, or unsure on its own scale; say
+which, and on what signal. A tier change boots a fresh agent that pays
+its rent again from zero, because a cache belongs to the model that
+wrote it.
 
 ## Claims
 Derive everything you tell me about the record.

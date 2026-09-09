@@ -30,6 +30,7 @@ rule above exists to stop.
 | `the repository's commits carry source, tests and ADRs only` | the first draft of this workflow had the frame agent commit `frame.md` as the slice's first commit, and was stopped in planning: the records and the ledger are the driver's, the repository's commits carry source, tests and ADRs. Seen, not measured |
 | `Plan, in plan mode` | asked for by the user, so that the plan is the file the harness presents for approval, read by every slice, rather than one of the driver's own making. Asked for, not measured |
 | `disable-model-invocation: true` | asked for by the user: the skill runs when they type `/grill-to-build` and never because a message matched its description, so the description carries no trigger and the skill costs the session no context until it is called. Asked for, not measured |
+| `Research and spikes get the same judgement from you` | asked for by the user: step 1's agents, the readers of the brief's sources and the spikes, have no plan level to follow, and inheriting the driver's model would put the top tier under a read. They are judged like every other job, by the driver, from the question, routine unless it says otherwise, and climb on signal. Asked for, not measured |
 
 Read the table before cutting a line. Every one of these looks like something a
 model would not need telling, which is exactly why they are here: each one was
