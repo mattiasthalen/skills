@@ -97,8 +97,9 @@ const stack = []
 const unfinished = []
 const attackOff = []
 let attack = true
-for (const s of slices) {
-  log(`Slice ${s.name}: ${s.level}, ${base} -> ${s.branch}${attack ? '' : ', attack off'}`)
+for (let i = 0; i < slices.length; i++) {
+  const s = slices[i]
+  log(`Slice ${i + 1}/${slices.length}: ${s.name} (${s.level}), ${base} -> ${s.branch}${attack ? '' : ', attack off'}`)
   const digest = await workflow({ scriptPath: script }, {
     slice: s.name,
     plan,
@@ -107,6 +108,8 @@ for (const s of slices) {
     records: `${records}/${s.branch}`,
     ledger,
     adr,
+    index: i + 1,
+    total: slices.length,
     lens: s.lens || undefined,
     attack,
     models: args.models,
