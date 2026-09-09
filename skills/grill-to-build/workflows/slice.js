@@ -13,13 +13,16 @@ export const meta = {
 //   ledger   the ledger, outside the repository
 //   adr      the MADR directory, inside the repository
 //   label    optional: the prefix of this slice's phases in the progress view; the branch by default
+//   index    optional: this slice's 1-based position in the build, for its label; 1 by default
+//   total    optional: how many slices the build has, for its label; 1 by default
 //   lens     optional: the slice-specific lens, as a job for a reviewer
 //   attack   optional: false when the last slice's kill count says the attack stopped paying
 //   models   optional: a level or a rung by name, for a job, a seam, or a lens
 //   rungs    optional: the rung each level maps to
 //   ladder   optional: the rungs for climbing, lowest first, as model/effort
-// It returns pointers and numbers, never contents. Each seam is its own phase, and every phase
-// carries the slice's prefix, so a build of several slices reads slice by slice in /workflows.
+// It returns pointers and numbers, never contents. Each seam is its own phase, and every agent's
+// label carries the slice's and seam's position, so a build of several slices reads slice by
+// slice, seam by seam, in /workflows even where nested runs collapse to one flat list.
 
 const need = ['slice', 'plan', 'base', 'branch', 'records', 'ledger', 'adr']
 const missing = need.filter(k => !args || !args[k])
@@ -28,6 +31,7 @@ const { slice, plan, base, branch, records, ledger, adr } = args
 const attack = args.attack !== false
 const frame = `${records}/frame.md`
 const range = `${base}..${branch}`
+const SLICE = `Slice ${args.index || 1}/${args.total || 1}`
 const P = `${args.label || branch}: ` // the prefix of every phase of this slice
 
 // Complexity, not role: a task's level sets its rungs. The plan names levels, the frame checks
@@ -70,7 +74,7 @@ async function climb(job, start, prompt, opts, signal) {
     const rung = LADDER[i]
     const [model, effort] = rung.split('/')
     agents++
-    const result = await agent(prompt, { ...opts, model, effort, label: `${opts.label} @ ${rung}` })
+    const result = await agent(prompt, { ...opts, model, effort })
     if (result != null) last = result
     const why = result == null ? 'no result' : signal(result)
     if (!why) return result
@@ -176,7 +180,7 @@ Write ${frame}, the driver's record, outside the repository, with a heading for 
 7. The commit convention in use.
 8. Levels. The plan says how hard each seam is and the slice as a whole, trivial, routine, hard or novel; unnamed in the plan is routine. Give each as the plan has it, and beside it your own after reading the code, kept where the code agrees and moved either way where it does not.
 The frame is written when every item above has a heading in it. Return the structure, not the prose: seams (name, check, planned, level), checks, decisions, build, accept, the slice's planned and level, and ${SCALE}.`,
-  { label: 'frame', phase: `${P}Frame`, schema: FRAME },
+  { label: `${SLICE} - Frame`, phase: `${P}Frame`, schema: FRAME },
   r => (!r.seams.length && !r.checks.length ? 'empty' : unsure(r)),
 )
 if (!framed) throw new Error('no frame: the frame agent returned nothing at any rung')
@@ -208,6 +212,8 @@ for (let i = 0; i < framed.seams.length; i++) {
   const s = framed.seams[i]
   const title = `Seam ${i + 1}: ${s.name}`
   const phase = `${P}${title}`
+  const seamPos = `Seam ${i + 1}/${framed.seams.length}`
+  const seamLabel = step => `${SLICE} - ${seamPos} - ${step}: ${s.name} @ ${s.level}`
   const seamNamed = named(s.name)
   const build = seamNamed || RUNGS[s.level]
   const rungs = {
@@ -232,7 +238,7 @@ A decision the frame lists for this seam gets a MADR in ${adr} at the moment you
 Append one line to ${ledger} per commit: timestamp from date -u, sha, what and why. ${RECORDS_RULE}
 Push ${branch}.${pr ? '' : ` Open a draft pull request from ${branch} onto ${base}, titled for the slice, its body the summary in ${frame}, and return its URL, or an empty string with the reason in the note.`}
 Return the seam's range as the sha before it and the sha after it from git log, its commit count, its ADRs with the check each Confirmation names, done (true once the check passes and the commit is in), the pull request URL, the note, and ${SCALE}.`,
-    { label: `${title} build`, phase, schema: BUILT },
+    { label: seamLabel('Build'), phase, schema: BUILT },
     r => (!r.done ? 'unfinished' : unsure(r)),
   )
   if (!built) {
@@ -250,7 +256,7 @@ Return the seam's range as the sha before it and the sha after it from git log, 
     rungs.review,
     `Review seam "${s.name}" of slice "${slice}": the diff ${built.range} on branch ${branch}, and the code it touches. Look for defects, and for the refactoring the green left behind: duplication, naming, structure. Check that the seam's test, ${s.check}, fails without the change it guards.
 ${REPORT_RULE}, and ${SCALE}.`,
-    { label: `${title} review`, phase, schema: FINDINGS },
+    { label: seamLabel('Review'), phase, schema: FINDINGS },
     unsure,
   )
   const found = (reviewed ? reviewed.findings : []).map(f => ({ ...f, id: findings.length + 1 + (reviewed.findings.indexOf(f)), lens: `${title} review`, stage: 'seam', fate: 'stands', note: '', sha: '' }))
@@ -265,7 +271,7 @@ ${REPORT_RULE}, and ${SCALE}.`,
 ${listOf(found)}
 Read the ledger at ${ledger} first: an earlier agent may have fixed some of these. For each finding, fix it, or write down why it stays, a reason a reviewer would accept. Run the seam's check and the frame's checks (${frame}) after each fix. Commit each fix as its own conventional commit, append one line to ${ledger} for it (timestamp from date -u, sha, what and why), and push. ${RECORDS_RULE}
 Return every id with fixed true or false, the note, the sha when fixed, and ${SCALE}.`,
-    { label: `${title} repair`, phase, schema: REPAIRED },
+    { label: seamLabel('Repair'), phase, schema: REPAIRED },
     unsure,
   )
   for (const f of found) {
@@ -291,7 +297,7 @@ const review = (lens, job) =>
     named(lens) || models.slice.review,
     `Review slice "${slice}": branch ${branch}, the diff ${range}, the frame at ${frame}. Read the diff and the code it touches, and ${job}.
 ${REPORT_RULE}, and ${SCALE}.`,
-    { label: lens, phase: `${P}Verify`, schema: FINDINGS },
+    { label: `${SLICE} - Verify: ${lens}`, phase: `${P}Verify`, schema: FINDINGS },
     r => (!r.findings.length ? 'empty' : unsure(r)),
   )
 const recompute = (label, phase) =>
@@ -314,7 +320,7 @@ if (args.lens) LENSES.push(['slice lens', args.lens])
 // A barrier: findings are deduplicated across lenses before anything is spent on them.
 const reviewed = (await parallel([
   ...LENSES.map(([lens, job]) => () => review(lens, job).then(r => [lens, r])),
-  () => recompute('recomputation', `${P}Verify`).then(r => ['recomputation', r]),
+  () => recompute(`${SLICE} - Verify: recomputation`, `${P}Verify`).then(r => ['recomputation', r]),
 ])).filter(Boolean)
 const reviews = reviewed.filter(([, r]) => r).map(([lens]) => lens)
 for (const must of ['code review', 'security review', 'recomputation'])
@@ -350,7 +356,7 @@ if (attack && whole().length) {
 ${f.title}, at ${where(f)}
 ${f.detail}
 Read the code it names. It stands if it is real and worth fixing in this slice; it is refuted if it is wrong, already handled, or outside the slice as the frame at ${frame} draws it. Give the reason in one line, and ${SCALE}. A verdict you cannot settle is a low confidence, not a guess.`,
-      { label: `attack #${f.id}`, phase: `${P}Attack`, schema: VERDICT },
+      { label: `${SLICE} - Attack #${f.id}`, phase: `${P}Attack`, schema: VERDICT },
       unsure,
     )))
   verdicts.forEach((v, i) => {
@@ -390,7 +396,7 @@ async function repair(group, phase) {
 ${listOf(group.items)}
 Read the ledger at ${ledger} first: an earlier agent may have fixed some of these. For each finding, fix it, or write down why it stays, a reason a reviewer would accept. Run the checks the frame at ${frame} names after each fix. Commit each fix as its own conventional commit, append one line to ${ledger} for it (timestamp from date -u, sha, what and why), and push. ${RECORDS_RULE}
 Return every id with fixed true or false, the note, the sha when fixed, and ${SCALE}.`,
-    { label: `repair ${group.file}`, phase, schema: REPAIRED },
+    { label: `${SLICE} - Repair: ${group.file}`, phase, schema: REPAIRED },
     unsure,
   )
   for (const f of group.items) {
@@ -412,12 +418,12 @@ log(`Repair: ${groups.length} files, ${count('fixed')} fixed, ${count('written d
 
 // Close: done means it builds from a clean clone after the repairs. One more round on what the clean
 // clone finds, then the findings written down, the PR body checked against the record, the PR marked ready.
-let clean = await recompute('clean clone', `${P}Close`)
+let clean = await recompute(`${SLICE} - Close: clean clone`, `${P}Close`)
 if (clean && clean.findings.length) {
   const again = clean.findings.map((f, i) => ({ ...f, id: findings.length + 1 + i, lens: 'clean clone', stage: 'slice', fate: 'stands', note: '', sha: '' }))
   findings.push(...again)
   for (const g of byFile(again)) await repair(g, `${P}Close`)
-  clean = await recompute('clean clone, again', `${P}Close`)
+  clean = await recompute(`${SLICE} - Close: clean clone, again`, `${P}Close`)
 }
 const builds = !!clean && !clean.findings.length
 if (!builds) unfinished.push(clean ? `clean clone: ${clean.findings.map(f => f.title).join('; ')}` : 'clean clone: no result at any rung')
@@ -435,7 +441,7 @@ ${table || '(no findings)'}
 3. ${builds ? 'The slice builds from a clean clone: mark the pull request ready for review.' : 'The slice does not build from a clean clone: leave the pull request a draft and say so in the note.'}
 Append one line to ${ledger}: timestamp from date -u, the sha of ${branch}, what and why. ${RECORDS_RULE}
 Return the pull request URL, ready (true once it is marked ready for review), the commit count from git rev-list --count ${range}, the note, and ${SCALE}.`,
-  { label: 'close', phase: `${P}Close`, schema: CLOSED },
+  { label: `${SLICE} - Close`, phase: `${P}Close`, schema: CLOSED },
   unsure,
 )
 const unrepaired = findings.filter(f => f.fate === 'unrepaired').length
