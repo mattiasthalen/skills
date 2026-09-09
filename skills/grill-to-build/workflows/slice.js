@@ -198,8 +198,6 @@ models.slice = {
   close: rungFor('close', RUNGS.routine),
 }
 log(`${P}: ${framed.level} (${sliceBy}), ${framed.seams.length} seams, ${framed.decisions.length} decisions`)
-// The roster up front: seams run one after another, so their rows appear one at a time.
-for (let i = 0; i < framed.seams.length; i++) log(`  Seam ${i + 1}/${framed.seams.length}: ${framed.seams[i].name} @ ${framed.seams[i].level}`)
 
 const findings = [] // every finding of the slice, seam and whole, with its fate
 const adrs = []
