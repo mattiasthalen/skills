@@ -57,7 +57,9 @@ too. The field takes a list once there is more than one.
 `claude plugin tag` fails if they drift apart.
 
 `SKILL.md` carries its name in the front matter. Without it the invocation name
-falls back to the directory name and changes whenever the directory does.
+falls back to the directory name and changes whenever the directory does. It
+also carries `disable-model-invocation: true`: the skill runs by
+`/grill-to-build` and never because a message matched its description.
 
 ## Checking a change
 

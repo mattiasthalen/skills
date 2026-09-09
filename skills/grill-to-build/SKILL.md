@@ -1,6 +1,7 @@
 ---
 name: "grill-to-build"
-description: "A build run from a brief. Use whenever I hand you one."
+description: "A build run from a brief."
+disable-model-invocation: true
 ---
 
 ## The run
