@@ -47,6 +47,12 @@ attacked — attacked and killed. An attack that has stopped killing has
 stopped paying for its run: the build turns it off for the next slice,
 and says so.
 
+An agent pays its floor — its system prompt and its tools — before it
+reads a line, and pays it again from zero at every rung it climbs. So a
+fan-out's price is its count, not its work: a skeptic per finding pays
+that floor to read a file another skeptic is reading beside it. Give one
+agent the file and every finding on it.
+
 Widen the job, not the count.
 
 ## Model
