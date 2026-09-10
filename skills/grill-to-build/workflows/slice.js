@@ -390,7 +390,7 @@ if (attack && whole().length) {
       `Refute these findings against ${g.file} on branch ${branch} (${range}). They came from different reviews: judge each on its own, and one being wrong says nothing about the next.
 ${listOf(g.items)}
 Read the file and the code they name. A finding stands if it is real and worth fixing in this slice; it is refuted if it is wrong, already handled, or outside the slice as the frame at ${frame} draws it.
-Return a verdict per id, in the order they are given: refuted, the reason in one line, and ${SCALE} for that verdict alone. A verdict you cannot settle is a low confidence, not a guess. Return your confidence in the set as a whole too.`,
+Return a verdict per id: refuted, the reason in one line, and ${SCALE} for that verdict alone; then ${SCALE} for the set as a whole. A verdict you cannot settle is a low confidence, not a guess.`,
       { label: `Attack: ${shortly(g)}`, phase: P, schema: VERDICTS },
       unsure,
     ).then(r => ({ group: g, r }))))
