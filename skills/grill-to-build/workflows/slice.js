@@ -1,7 +1,7 @@
 export const meta = {
   name: 'slice',
   description: 'One slice of a grill-to-build run: frame, a seam at a time, verify, attack, repair, close',
-  whenToUse: 'One slice of a confirmed plan, with the pointers as args. build.js beside it runs every slice. Phases, each prefixed with the slice: Frame; one per seam, a build, a review where the level earns one, a repair; Verify, the lenses at once; Attack, a skeptic per file; Repair, a file at a time; Close, a clean clone and the PR marked ready.',
+  whenToUse: 'One slice of a confirmed plan, with the pointers as args. build.js beside it runs every slice, and under it these phases flatten: the agents are listed under the build\'s phase for the slice, told apart by their labels. Run alone it is its own parent and the phases render: Frame; one per seam, a build, a review where the level earns one, a repair; Verify, the lenses at once; Attack, a skeptic per file; Repair, a file at a time; Close, a clean clone and the PR marked ready.',
 }
 
 // One slice of grill-to-build, run by path with the pointers as args:
