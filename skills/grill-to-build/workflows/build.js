@@ -50,7 +50,7 @@ async function climb(job, start, prompt, opts, signal) {
     const rung = LADDER[i]
     const [model, effort] = rung.split('/')
     agents++
-    const result = await agent(prompt, { ...opts, model, effort, label: `${opts.label} @ ${rung}` })
+    const result = await agent(prompt, { ...opts, model, effort, label: `${opts.label} · ${rung}` })
     if (result != null) last = result
     const why = result == null ? 'no result' : signal(result)
     if (!why) return result
