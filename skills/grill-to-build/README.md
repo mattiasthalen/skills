@@ -204,10 +204,15 @@ confirmed plan, and `slice.js` runs one slice. The plugin serves them by name,
 the driver runs them by path, `${CLAUDE_SKILL_DIR}/workflows/build.js`, with
 the pointers as `args`. Two files, one responsibility each: `slice.js` knows
 nothing about the build, and `build.js` holds the loop, the stacking and the
-attack rule. In `/workflows`, a child's agents sit under a group named for the
-child, so every phase `slice.js` runs carries the slice's prefix, "slice-2:
-Frame", "slice-2: Seam 1: reader", and a build reads slice by slice; `label`
-in the args sets the prefix, and the branch is the default. Steering one slice is running `slice.js` alone. Re-planning
+attack rule. In `/workflows`, a child workflow's phases do not survive into the
+parent's tree: `build.js`'s phase per slice stays, and the slice's agents are
+listed flat beneath it. So inside a slice the label is the only thing telling
+one agent from another, and every label carries the seam, the step, the level
+and the rung — `Seam 1/4 - Build: reader @ routine · sonnet/low`, and a climb
+reads as the same job at the next rung rather than as the same row twice.
+`slice.js` still names a phase because it is also run alone, and then it is the
+parent and its phases are what render; `label` and `index` in the args name it.
+Steering one slice is running `slice.js` alone. Re-planning
 mid-build is stopping the run, editing the plan, and rerunning `build.js` with
 `from`.
 
