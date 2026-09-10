@@ -23,7 +23,8 @@ rule above exists to stop.
 | `Name both on every agent` | all 149 agents inherited the main session's model. Every one of 4,747 calls in a sixteen-hour run was the large one, and neither `model` nor `effort` is set on a single `agent()` call in the eight workflow scripts, nor on the three agents the main session spawned directly |
 | `escalate ... when one comes back empty, or unsure on its own scale` | the two signals a cheap agent gives when it is out of its depth, and both are rare enough to escalate on: 4 of 86 adversarial verdicts landed in the uncertain band, and 1 of 18 lenses returned nothing |
 | `attacked, and killed` | the adversarial pass killed 11 findings of 29, then 12 of 33, then 1 of 24 — and nothing in the run noticed the third number |
-| `An agent pays its floor ... before it reads a line` | a run of about 200 agents held 17M tokens with the agents sitting at 40k apiece before any of them read a line: the floor was near half of what the run spent. The widest count on the board was the attack, one skeptic per finding at 29, 33 and 24 findings a slice, each paying that floor to read a file its neighbour was reading |
+| `An agent pays its floor ... before it reads a line` | measured over the 281 workflow agents of one build, from their transcripts. The median agent's first turn carried 45,393 tokens of context before it read a line. That floor sits in the context again on every turn the agent takes, and re-reading it is about 40% of what the run cost — so an agent's floor is charged by its turn count, not once. The attack was the worst payer: 83% of its context was floor, against 53% for a lens and 46% for a build, at a median of 9 turns and 731 tokens of output per verdict. 115 skeptics, one per finding, stood on 55 files |
+| `a review where the level earns one` (the seam gate) | the larger number, and not the one that looked larger. Of the 281 agents, 32 were reviews and repairs of trivial and routine seams — lines the lenses on the whole read again afterwards. Batching the attack 115 into 55 is the more obvious cut and the smaller one: a skeptic is short, nine turns, so it re-reads its floor fewer times than the reviewer it sits beside |
 | `Fan-out is a workflow, wherever it falls in the run` | the line was there once — `Workflows wherever they help, not just per slice` — and the remake cut it as one describing what the model does anyway, no incident behind it. Without it, reading the brief's sources became 14 agents spawned from the driver's seat: a prompt typed and a digest read in the driver's window apiece, and no run record, so none of the numbers `Width` asks for after every run existed. Back, with the judgement taken out of it |
 | `It is written` (step 4, the path of `build.js`) | not a new incident: the three rows above it, made mechanical. The eight scripts the driver wrote by hand set neither `model` nor `effort` on any `agent()` call; none returned attacked and killed, so nothing noticed the third number; twelve runs of them cost the driver 33,045 tokens of script typed and digest read. A script typed once and run by path is where those rules are code instead of lines the driver remembers while it types |
 | `and reviews it` (step 4) | after every slice, the driver ran a code review and a security review in the main session, because the done sentence named both and nothing said where they run. Seen by the user across a run, not measured from a transcript, so no number is claimed. It was first a bullet of its own, "neither runs in your seat", and the writing pass cut that as a prohibition: the positive is the workflow reviewing, said in step 4's lead |
@@ -222,9 +223,11 @@ What is code in `slice.js`, and which rule it carries:
   call and in its label, and climbs the ladder on a signal: no result, empty, or
   unsure on its own scale. Each climb comes back in the digest with the job, the
   rung, the signal and the rung it went to. A job spends two rungs, its first
-  included, and `args.climbs` moves that: a rung is a fresh agent paying the
-  floor from zero, so an uncapped climb bought a ladder of floors for one job
-  that never cleared its signal. The ladder is haiku/low, sonnet/low,
+  included, and `args.climbs` moves that. It is a bound, not a saving: across
+  the 281 agents of one build, eight jobs climbed and every one of them stopped
+  at the second rung, so the cap would have removed nothing. What it removes is
+  the tail — a job that never clears its signal buying a whole ladder of floors.
+  The ladder is haiku/low, sonnet/low,
   sonnet/high, opus/low, opus/high, fable/high; `xhigh` and `max` return a 400
   on models that lack them, so the driver adds fable/xhigh through `args.ladder`
   when it wants it. Nothing inherits the session's model: the runner's `best`
