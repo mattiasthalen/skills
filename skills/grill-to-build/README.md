@@ -69,6 +69,19 @@ build" where a trigger word should lead; the point lapsed when the skill became
 user-invoked, since a description that never triggers anything is a one-line
 summary for the `/` menu, and that is what it is now.
 
+A third pass, over the bounds on what a fan-out spends and the run report. It
+cut two lines. In the attack prompt, "in the order they are given": the schema
+carries an id per verdict and the code matches on it, so nothing ever reads the
+order — an instruction that changes nothing against the default. In `Width`, "a
+hundred short agents cost less than twenty long ones", which said what the
+sentence above it and the measurement beside it had already said.
+
+Two negations stand, with their reason. "A verdict you cannot settle is a low
+confidence, not a guess" names the failure it prevents, a confident guess, which
+the positive alone does not reach. `CLAUDE.md`'s "Write the change first" keeps
+the pass from standing in for the writing; it is cheap, and the failure is one
+an agent handed a writing skill can walk into.
+
 ## Does one session hold a plan?
 
 There is no compaction here, so the question is whether a run fits in one window

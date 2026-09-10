@@ -51,10 +51,9 @@ An agent pays its floor — its system prompt and its tools — before it
 reads a line, and pays it again on every turn, because the floor sits in
 the context each time. So an agent's price follows its turns, not its
 existence: over one build, cost tracked turns at r=0.94, and the eighty
-agents past forty turns were two thirds of it. A hundred short agents
-cost less than twenty long ones. Cut what an agent has to do before you
-cut how many there are, and where two of them read the same file, give
-one of them both jobs.
+agents past forty turns were two thirds of it. Cut what an agent has to
+do before you cut how many there are, and where two of them read the
+same file, give one of them both jobs.
 
 Widen the job, not the count.
 
