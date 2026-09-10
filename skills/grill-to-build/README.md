@@ -23,6 +23,7 @@ rule above exists to stop.
 | `Name both on every agent` | all 149 agents inherited the main session's model. Every one of 4,747 calls in a sixteen-hour run was the large one, and neither `model` nor `effort` is set on a single `agent()` call in the eight workflow scripts, nor on the three agents the main session spawned directly |
 | `escalate ... when one comes back empty, or unsure on its own scale` | the two signals a cheap agent gives when it is out of its depth, and both are rare enough to escalate on: 4 of 86 adversarial verdicts landed in the uncertain band, and 1 of 18 lenses returned nothing |
 | `attacked, and killed` | the adversarial pass killed 11 findings of 29, then 12 of 33, then 1 of 24 — and nothing in the run noticed the third number |
+| `An agent pays its floor ... before it reads a line` | a run of about 200 agents held 17M tokens with the agents sitting at 40k apiece before any of them read a line: the floor was near half of what the run spent. The widest count on the board was the attack, one skeptic per finding at 29, 33 and 24 findings a slice, each paying that floor to read a file its neighbour was reading |
 | `Fan-out is a workflow, wherever it falls in the run` | the line was there once — `Workflows wherever they help, not just per slice` — and the remake cut it as one describing what the model does anyway, no incident behind it. Without it, reading the brief's sources became 14 agents spawned from the driver's seat: a prompt typed and a digest read in the driver's window apiece, and no run record, so none of the numbers `Width` asks for after every run existed. Back, with the judgement taken out of it |
 | `It is written` (step 4, the path of `build.js`) | not a new incident: the three rows above it, made mechanical. The eight scripts the driver wrote by hand set neither `model` nor `effort` on any `agent()` call; none returned attacked and killed, so nothing noticed the third number; twelve runs of them cost the driver 33,045 tokens of script typed and digest read. A script typed once and run by path is where those rules are code instead of lines the driver remembers while it types |
 | `and reviews it` (step 4) | after every slice, the driver ran a code review and a security review in the main session, because the done sentence named both and nothing said where they run. Seen by the user across a run, not measured from a transcript, so no number is claimed. It was first a bullet of its own, "neither runs in your seat", and the writing pass cut that as a prohibition: the positive is the workflow reviewing, said in step 4's lead |
@@ -215,7 +216,10 @@ What is code in `slice.js`, and which rule it carries:
 - Every agent goes through one helper that names its model and effort in the
   call and in its label, and climbs the ladder on a signal: no result, empty, or
   unsure on its own scale. Each climb comes back in the digest with the job, the
-  rung, the signal and the rung it went to. The ladder is haiku/low, sonnet/low,
+  rung, the signal and the rung it went to. A job spends two rungs, its first
+  included, and `args.climbs` moves that: a rung is a fresh agent paying the
+  floor from zero, so an uncapped climb bought a ladder of floors for one job
+  that never cleared its signal. The ladder is haiku/low, sonnet/low,
   sonnet/high, opus/low, opus/high, fable/high; `xhigh` and `max` return a 400
   on models that lack them, so the driver adds fable/xhigh through `args.ladder`
   when it wants it. Nothing inherits the session's model: the runner's `best`
@@ -233,15 +237,24 @@ What is code in `slice.js`, and which rule it carries:
   the refactoring the green left behind, a repair of what it found. The format
   is `mattpocock/skills`' `implement` driving `tdd` seam by seam, with a review
   per seam added; `tdd` leaves refactoring to review, which is the seam
-  reviewer's job.
+  reviewer's job. That review runs where the seam is hard or novel, and
+  `args.seamReview` is `all` when every seam should have one: the lenses on the
+  whole read every seam's lines either way, so a routine seam was read twice for
+  two floors, and only the earlier read comes before the next seam stacks on it.
 - Then the whole, `base..branch`, under six lenses at once: code review,
   security review, test quality, conventions, the slice's own lens when the
   plan names one, and recomputation from a fresh clone. Findings are
   deduplicated across lenses before anything is spent on them, one skeptic per
-  finding attacks what is left, and attacked and killed go back in the digest.
+  file attacks what is left, and attacked, killed and the skeptics it took go
+  back in the digest. The skeptic still did not write what it judges, and it is
+  told to judge each finding on its own; what it stops paying for is the floor a
+  second skeptic paid to open the same file. Kill rate is the number that says
+  whether grouping them cost anything: it was 11 of 29, 12 of 33 and 1 of 24.
 - Repairs group by file and run in turn, one working tree, one branch, one
   index; the most severe twenty are the work and the rest are written down as
-  deferred, and said so.
+  deferred, and said so. Five agents carry a round and the remaining files ride
+  along in the last, `args.repairGroups` moving that: a second file costs a
+  repairer a read, a second agent costs it the floor.
 - Done means it builds from a clean clone after the repairs, so recomputation
   runs again, with one more repair round on what it finds. The close agent
   writes the findings record, drafts the PR body, checks every claim in it
@@ -260,8 +273,11 @@ per slice as a child workflow, each on the branch of the one before. When a
 slice's kill rate falls under one in ten, the attack has stopped paying for its
 run, and the next slice runs without it; the stack's digest says after which
 slice and on what numbers. It sums the slices' agent counts against the run's
-cap of 1,000 and warns past 800: a slice is sixty to a hundred agents with its
-climbs, so about ten slices is the ceiling for one run.
+cap of 1,000 and warns past 800. A slice was sixty to a hundred agents with its
+climbs before the bounds above — capped climbs, a skeptic per file, a review on
+the seams that earn one, five repairers a round — and what it is with them is a
+number the next run reports, not one claimed here. Ten slices is the ceiling
+until that number exists.
 
 What it deliberately does not do. Repairs never run in parallel: the old line
 "fan out like everything else" was cut from the repair rule in the remake, and

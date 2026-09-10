@@ -14,7 +14,9 @@ export const meta = {
 //   script       the path of slice.js
 //   from         optional: the slice to start at; earlier ones are done, their branches in place
 //   attackFloor  optional: kills per attacked finding below which the next slice runs without the attack
-//   models, rungs, ladder   optional, passed to every slice
+//   models, rungs, ladder            optional, passed to every slice
+//   climbs, seamReview, repairGroups optional, passed to every slice: what each agent and each
+//     fan-out may spend. An agent's floor is paid before it reads a line, so these bound the run.
 // It returns the stack: every slice's digest, the PRs in order, and what is unfinished.
 
 const need = ['plan', 'base', 'records', 'ledger', 'adr', 'script']
@@ -37,11 +39,14 @@ const rungIndex = rung => {
   return i
 }
 const UNSURE = 0.6
+const CLIMBS = args.climbs == null ? 2 : Math.max(1, args.climbs) // rungs one job may spend, its first included
 const escalations = []
 let agents = 0
 async function climb(job, start, prompt, opts, signal) {
   let last = null
-  for (let i = rungIndex(start); i < LADDER.length; i++) {
+  const from = rungIndex(start)
+  const stop = Math.min(LADDER.length, from + CLIMBS)
+  for (let i = from; i < stop; i++) {
     const rung = LADDER[i]
     const [model, effort] = rung.split('/')
     agents++
@@ -49,9 +54,9 @@ async function climb(job, start, prompt, opts, signal) {
     if (result != null) last = result
     const why = result == null ? 'no result' : signal(result)
     if (!why) return result
-    const to = LADDER[i + 1] || null
+    const to = i + 1 < stop ? LADDER[i + 1] : null
     escalations.push({ job, at: rung, signal: why, to })
-    log(`${job}: ${why} at ${rung}${to ? `, climbing to ${to}` : ', top of the ladder'}`)
+    log(`${job}: ${why} at ${rung}${to ? `, climbing to ${to}` : i + 1 < LADDER.length ? `, spent its ${CLIMBS} rungs` : ', top of the ladder'}`)
   }
   return last
 }
@@ -115,6 +120,9 @@ for (let i = 0; i < slices.length; i++) {
     models: args.models,
     rungs: args.rungs,
     ladder: args.ladder,
+    climbs: args.climbs,
+    seamReview: args.seamReview,
+    repairGroups: args.repairGroups,
   })
   if (!digest) {
     unfinished.push(`${s.name}: the slice workflow returned nothing`)
@@ -135,7 +143,7 @@ for (let i = 0; i < slices.length; i++) {
     }
   }
   const p = digest.pr || {}
-  log(`Slice ${s.name}: ${digest.commits} commits, ${f.found || 0} findings, ${f.killed == null ? 'not attacked' : `${f.killed} of ${f.attacked} killed`}, PR ${p.url || 'none'}${p.url ? (p.ready ? ', ready' : ', draft') : ''}, ${agents} agents so far`)
+  log(`Slice ${s.name}: ${digest.commits} commits, ${f.found || 0} findings, ${f.killed == null ? 'not attacked' : `${f.killed} of ${f.attacked} killed by ${f.skeptics} skeptics`}, PR ${p.url || 'none'}${p.url ? (p.ready ? ', ready' : ', draft') : ''}, ${agents} agents so far`)
   if (agents > WARN) log(`${agents} agents this run; the cap is ${CAP}`)
   base = s.branch
 }

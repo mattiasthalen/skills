@@ -1,7 +1,7 @@
 export const meta = {
   name: 'slice',
   description: 'One slice of a grill-to-build run: frame, a seam at a time, verify, attack, repair, close',
-  whenToUse: 'One slice of a confirmed plan, with the pointers as args. build.js beside it runs every slice. Phases, each prefixed with the slice: Frame; one per seam, a build, a review, a repair; Verify, the lenses at once; Attack, a skeptic per finding; Repair, a file at a time; Close, a clean clone and the PR marked ready.',
+  whenToUse: 'One slice of a confirmed plan, with the pointers as args. build.js beside it runs every slice. Phases, each prefixed with the slice: Frame; one per seam, a build, a review where the level earns one, a repair; Verify, the lenses at once; Attack, a skeptic per file; Repair, a file at a time; Close, a clean clone and the PR marked ready.',
 }
 
 // One slice of grill-to-build, run by path with the pointers as args:
@@ -19,6 +19,9 @@ export const meta = {
 //   models   optional: a level or a rung by name, for a job, a seam, or a lens
 //   rungs    optional: the rung each level maps to
 //   ladder   optional: the rungs for climbing, lowest first, as model/effort
+//   climbs   optional: rungs one job may spend, its first included; 2 by default
+//   seamReview   optional: "all" gives every seam its own review; "hard", the default, only hard and novel
+//   repairGroups optional: repair agents in one round, the tail sharing the last; 5 by default
 // It returns pointers and numbers, never contents. Every agent of the slice sits under one phase,
 // "Slice <index> - <slice>", and a seam's agents are labelled by their position, step and level, so
 // a build of several slices reads slice by slice, seam by seam, in /workflows.
@@ -60,6 +63,11 @@ const named = name => {
 }
 const UNSURE = 0.6 // below this, on its own scale, an agent is unsure
 const WIDEST = 20 // twenty findings is the widest work in a slice
+// An agent's floor — its system prompt and tools — is paid before it reads a line, and a climb pays it
+// again from zero. So a job is bounded by the rungs it may spend, not by the length of the ladder.
+const CLIMBS = args.climbs == null ? 2 : Math.max(1, args.climbs) // rungs one job may spend, its first included
+const GROUPS = args.repairGroups == null ? 5 : Math.max(1, args.repairGroups) // repair agents in one round
+const SEAM_REVIEW = args.seamReview === 'all' ? 'all' : 'hard' // 'hard': only hard and novel seams get their own
 const escalations = []
 const models = { seams: {} }
 let agents = 0
@@ -68,7 +76,9 @@ let agents = 0
 // signal(result) returns why to climb, or null when the result stands.
 async function climb(job, start, prompt, opts, signal) {
   let last = null
-  for (let i = rungIndex(start); i < LADDER.length; i++) {
+  const from = rungIndex(start)
+  const stop = Math.min(LADDER.length, from + CLIMBS)
+  for (let i = from; i < stop; i++) {
     const rung = LADDER[i]
     const [model, effort] = rung.split('/')
     agents++
@@ -76,15 +86,25 @@ async function climb(job, start, prompt, opts, signal) {
     if (result != null) last = result
     const why = result == null ? 'no result' : signal(result)
     if (!why) return result
-    const to = LADDER[i + 1] || null
+    const to = i + 1 < stop ? LADDER[i + 1] : null
     escalations.push({ job, at: rung, signal: why, to })
-    log(`${job}: ${why} at ${rung}${to ? `, climbing to ${to}` : ', top of the ladder'}`)
+    log(`${job}: ${why} at ${rung}${to ? `, climbing to ${to}` : i + 1 < LADDER.length ? `, spent its ${CLIMBS} rungs` : ', top of the ladder'}`)
   }
   return last
 }
 const unsure = r => (r.confidence < UNSURE ? 'unsure' : null)
 const where = f => `${f.file}${f.line != null ? `:${f.line}` : ''}`
 const listOf = items => items.map(f => `${f.id}. [${f.severity}] ${f.title}, at ${where(f)}\n   ${f.detail}`).join('\n')
+const byFile = items => {
+  const groups = []
+  for (const f of items) {
+    const g = groups.find(g => g.file === f.file)
+    if (g) g.items.push(f)
+    else groups.push({ file: f.file, items: [f] })
+  }
+  return groups
+}
+const shortly = g => (g.file.length > 60 ? `${g.file.slice(0, 57)}...` : g.file) // a label, not a path
 const RECORDS_RULE = `The ledger and everything under ${records} are the driver's records; the repository's commits carry source, tests and ADRs only.`
 const REPORT_RULE = 'Report each finding at the file and line it lives on, with a one-line title, the detail a repairer needs, and a severity of high, medium or low. Return an empty list when there is nothing to find'
 const SCALE = 'your confidence on your own scale, 0 to 1'
@@ -140,10 +160,20 @@ const FINDINGS = {
     confidence: CONFIDENCE,
   },
 }
-const VERDICT = {
+const VERDICTS = {
   type: 'object',
-  required: ['refuted', 'reason', 'confidence'],
-  properties: { refuted: { type: 'boolean' }, reason: { type: 'string' }, confidence: CONFIDENCE },
+  required: ['verdicts', 'confidence'],
+  properties: {
+    verdicts: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['id', 'refuted', 'reason', 'confidence'],
+        properties: { id: { type: 'integer' }, refuted: { type: 'boolean' }, reason: { type: 'string' }, confidence: CONFIDENCE },
+      },
+    },
+    confidence: CONFIDENCE,
+  },
 }
 const REPAIRED = {
   type: 'object',
@@ -213,17 +243,20 @@ for (let i = 0; i < framed.seams.length; i++) {
   const seamLabel = step => `Seam ${i + 1}/${framed.seams.length} - ${step}: ${s.name} @ ${s.level}`
   const seamNamed = named(s.name)
   const build = seamNamed || RUNGS[s.level]
+  // A seam's own review buys feedback before the next seam stacks on it. The Verify lenses read the whole
+  // diff later, every seam in it, so a routine seam is read either way: only the hard ones pay for both.
+  const ownReview = SEAM_REVIEW === 'all' || s.level === 'hard' || s.level === 'novel'
   const rungs = {
     level: s.level,
     by: seamNamed ? 'driver' : s.planned === s.level ? 'plan' : 'frame',
     build,
-    review: named(`${s.name} review`) || above(build),
+    review: ownReview ? named(`${s.name} review`) || above(build) : null,
     repair: named(`${s.name} repair`) || build,
   }
   models.seams[s.name] = rungs
-  const out = { name: s.name, level: s.level, done: false, commits: 0, findings: 0, fixed: 0, writtenDown: 0 }
+  const out = { name: s.name, level: s.level, reviewed: ownReview, done: false, commits: 0, findings: 0, fixed: 0, writtenDown: 0 }
   seams.push(out)
-  log(`${title}: build at ${rungs.build}, review at ${rungs.review}`)
+  log(`${title}: build at ${rungs.build}, ${ownReview ? `review at ${rungs.review}` : 'reviewed by the slice lenses'}`)
 
   const built = await climb(
     `${title} build`,
@@ -248,7 +281,7 @@ Return the seam's range as the sha before it and the sha after it from git log, 
   adrs.push(...built.adrs)
   if (!built.done) unfinished.push(`${title}: not done at the top of the ladder`)
 
-  const reviewed = await climb(
+  const reviewed = !ownReview ? null : await climb(
     `${title} review`,
     rungs.review,
     `Review seam "${s.name}" of slice "${slice}": the diff ${built.range} on branch ${branch}, and the code it touches. Look for defects, and for the refactoring the green left behind: duplication, naming, structure. Check that the seam's test, ${s.check}, fails without the change it guards.
@@ -256,7 +289,7 @@ ${REPORT_RULE}, and ${SCALE}.`,
     { label: seamLabel('Review'), phase, schema: FINDINGS },
     unsure,
   )
-  const found = (reviewed ? reviewed.findings : []).map(f => ({ ...f, id: findings.length + 1 + (reviewed.findings.indexOf(f)), lens: `${title} review`, stage: 'seam', fate: 'stands', note: '', sha: '' }))
+  const found = (reviewed ? reviewed.findings : []).map((f, n) => ({ ...f, id: findings.length + 1 + n, lens: `${title} review`, stage: 'seam', fate: 'stands', note: '', sha: '' }))
   findings.push(...found)
   out.findings = found.length
   if (!found.length) continue
@@ -295,6 +328,8 @@ const review = (lens, job) =>
     `Review slice "${slice}": branch ${branch}, the diff ${range}, the frame at ${frame}. Read the diff and the code it touches, and ${job}.
 ${REPORT_RULE}, and ${SCALE}.`,
     { label: `Verify: ${lens}`, phase: P, schema: FINDINGS },
+    // Empty stays a signal: 1 of 18 lenses returned nothing, and a second reader on "nothing here" is
+    // worth one agent. It is CLIMBS that makes it worth one — uncapped, a clean lens bought the whole ladder.
     r => (!r.findings.length ? 'empty' : unsure(r)),
   )
 const recompute = (label, phase) =>
@@ -341,29 +376,36 @@ log(`Verify: ${whole().length} findings from ${reviews.length} lenses, ${duplica
 // an attack that has stopped killing has stopped paying for its run.
 let attacked = null
 let killed = null
+let skeptics = null
 if (attack && whole().length) {
   const targets = whole()
   attacked = targets.length
   killed = 0
-  const verdicts = await parallel(targets.map(f => () =>
+  const groups = byFile(targets)
+  skeptics = groups.length
+  const verdicts = await parallel(groups.map(g => () =>
     climb(
-      `attack #${f.id}`,
+      `attack ${g.file}`,
       models.slice.attack,
-      `Refute this finding from the ${f.lens} of branch ${branch} (${range}):
-${f.title}, at ${where(f)}
-${f.detail}
-Read the code it names. It stands if it is real and worth fixing in this slice; it is refuted if it is wrong, already handled, or outside the slice as the frame at ${frame} draws it. Give the reason in one line, and ${SCALE}. A verdict you cannot settle is a low confidence, not a guess.`,
-      { label: `Attack #${f.id}`, phase: P, schema: VERDICT },
+      `Refute these findings against ${g.file} on branch ${branch} (${range}). They came from different reviews: judge each on its own, and one being wrong says nothing about the next.
+${listOf(g.items)}
+Read the file and the code they name. A finding stands if it is real and worth fixing in this slice; it is refuted if it is wrong, already handled, or outside the slice as the frame at ${frame} draws it.
+Return a verdict per id, in the order they are given: refuted, the reason in one line, and ${SCALE} for that verdict alone. A verdict you cannot settle is a low confidence, not a guess. Return your confidence in the set as a whole too.`,
+      { label: `Attack: ${shortly(g)}`, phase: P, schema: VERDICTS },
       unsure,
-    )))
-  verdicts.forEach((v, i) => {
-    if (v && v.refuted && v.confidence >= UNSURE) {
-      targets[i].fate = 'killed'
-      targets[i].note = v.reason
-      killed++
+    ).then(r => ({ group: g, r }))))
+  for (const v of verdicts.filter(Boolean)) {
+    if (!v.r) continue
+    for (const f of v.group.items) {
+      const one = v.r.verdicts.find(x => x.id === f.id)
+      if (one && one.refuted && one.confidence >= UNSURE) {
+        f.fate = 'killed'
+        f.note = one.reason
+        killed++
+      }
     }
-  })
-  log(`Attack: ${attacked} attacked, ${killed} killed`)
+  }
+  log(`Attack: ${attacked} findings over ${skeptics} skeptics, ${killed} killed`)
 }
 
 // Repair: the most severe twenty, grouped by file, one agent per file, in turn. One working tree,
@@ -376,14 +418,15 @@ for (const f of standing.slice(WIDEST)) {
 }
 if (standing.length > WIDEST) log(`Repair: ${standing.length - WIDEST} findings deferred beyond ${WIDEST}`)
 
-const byFile = items => {
-  const groups = []
-  for (const f of items) {
-    const g = groups.find(g => g.file === f.file)
-    if (g) g.items.push(f)
-    else groups.push({ file: f.file, items: [f] })
-  }
-  return groups
+// One agent per file, GROUPS of them at most: past that the tail rides along in the last one, because a
+// second file costs a repairer a read and a fresh agent costs it the floor again.
+const inGroups = items => {
+  const groups = byFile(items)
+  if (groups.length <= GROUPS) return groups
+  const head = groups.slice(0, GROUPS - 1)
+  const tail = groups.slice(GROUPS - 1)
+  head.push({ file: tail.map(g => g.file).join(', '), items: tail.flatMap(g => g.items) })
+  return head
 }
 async function repair(group, phase) {
   const done = await climb(
@@ -393,7 +436,7 @@ async function repair(group, phase) {
 ${listOf(group.items)}
 Read the ledger at ${ledger} first: an earlier agent may have fixed some of these. For each finding, fix it, or write down why it stays, a reason a reviewer would accept. Run the checks the frame at ${frame} names after each fix. Commit each fix as its own conventional commit, append one line to ${ledger} for it (timestamp from date -u, sha, what and why), and push. ${RECORDS_RULE}
 Return every id with fixed true or false, the note, the sha when fixed, and ${SCALE}.`,
-    { label: `${phase}: ${group.file}`, phase: P, schema: REPAIRED },
+    { label: `${phase}: ${shortly(group)}`, phase: P, schema: REPAIRED },
     unsure,
   )
   for (const f of group.items) {
@@ -408,10 +451,11 @@ Return every id with fixed true or false, the note, the sha when fixed, and ${SC
     f.sha = o.sha || ''
   }
 }
-const groups = byFile(standing.slice(0, WIDEST))
+const targeted = standing.slice(0, WIDEST)
+const groups = inGroups(targeted)
 for (const g of groups) await repair(g, 'Repair')
 const count = (fate, stage = 'slice') => findings.filter(f => f.stage === stage && f.fate === fate).length
-log(`Repair: ${groups.length} files, ${count('fixed')} fixed, ${count('written down')} written down`)
+log(`Repair: ${byFile(targeted).length} files over ${groups.length} agents, ${count('fixed')} fixed, ${count('written down')} written down`)
 
 // Close: done means it builds from a clean clone after the repairs. One more round on what the clean
 // clone finds, then the findings written down, the PR body checked against the record, the PR marked ready.
@@ -419,7 +463,7 @@ let clean = await recompute('Close: clean clone', P)
 if (clean && clean.findings.length) {
   const again = clean.findings.map((f, i) => ({ ...f, id: findings.length + 1 + i, lens: 'clean clone', stage: 'slice', fate: 'stands', note: '', sha: '' }))
   findings.push(...again)
-  for (const g of byFile(again)) await repair(g, 'Close: repair')
+  for (const g of inGroups(again)) await repair(g, 'Close: repair')
   clean = await recompute('Close: clean clone, again', P)
 }
 const builds = !!clean && !clean.findings.length
@@ -462,6 +506,7 @@ return {
     found: whole().length,
     duplicates,
     attacked,
+    skeptics, // agents the attack spent: one per file, not one per finding
     killed,
     fixed: count('fixed'),
     writtenDown: count('written down'),
