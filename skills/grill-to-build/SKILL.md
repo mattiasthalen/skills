@@ -48,12 +48,19 @@ stopped paying for its run: the build turns it off for the next slice,
 and says so.
 
 An agent pays its floor — its system prompt and its tools — before it
-reads a line, and pays it again from zero at every rung it climbs. So a
-fan-out's price is its count, not its work: a skeptic per finding pays
-that floor to read a file another skeptic is reading beside it. Give one
-agent the file and every finding on it.
+reads a line, and pays it again on every turn, because the floor sits in
+the context each time. So an agent's price follows its turns, not its
+existence: over one build, cost tracked turns at r=0.94, and the eighty
+agents past forty turns were two thirds of it. A hundred short agents
+cost less than twenty long ones. Cut what an agent has to do before you
+cut how many there are, and where two of them read the same file, give
+one of them both jobs.
 
 Widen the job, not the count.
+
+`measure/run-report.mjs` reads a saved session — its run records and its
+transcripts — and prints these numbers. Run it after a build and quote
+it; the numbers above came from it and are the ones to beat.
 
 ## Model
 Judge each agent's model and effort from its job, and name both. Say

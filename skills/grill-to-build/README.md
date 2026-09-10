@@ -287,6 +287,21 @@ the seams that earn one, five repairers a round — and what it is with them is 
 number the next run reports, not one claimed here. Ten slices is the ceiling
 until that number exists.
 
+## Measuring a run
+
+`measure/run-report.mjs` takes a session's saved logs and prints what
+`Width` asks for: the floor, cost by class of agent, cost against turns,
+the climbs and their depths, and how many files the attack's skeptics
+stood on. It needs two things kept together, and a session leaves both:
+`workflows/wf_*.json`, the run records, which carry the script that ran
+so a number is always against a known version; and
+`subagents/workflows/<runId>/agent-*.jsonl`, the transcripts, which carry
+the per-turn usage the run records do not. Save the pair and the run
+stays measurable; save only the run records and every number above is out
+of reach.
+
+    node skills/grill-to-build/measure/run-report.mjs <session-dir>
+
 What it deliberately does not do. Repairs never run in parallel: the old line
 "fan out like everything else" was cut from the repair rule in the remake, and
 parallel repairs in one working tree race on the index. The width numbers are
